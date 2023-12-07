@@ -5,12 +5,12 @@ def run_client(target_host, target_port):
     client.connect((target_host, target_port))
 
     # Envia datos al servidor VPN
-    message = "Hola desde el cliente"
+    message = input()
     client.send(message.encode("utf-8"))
 
     # Recibe la respuesta del servidor VPN
     response = client.recv(1024)
-    print(f"[*] Received from VPN: {response.decode('utf-8')}")
+    print(f"[*] Received response: {response.decode('utf-8')}")
 
     # Cierra la conexión
     client.close()

@@ -10,9 +10,14 @@ def handle_client(client_socket, target_host, target_port):
     data = client_socket.recv(1024)
     target_socket.send(data)
 
+    print(f"[*][Client->Server] Tunneling data: {data.decode('utf-8')}")
+
     # Recibe la respuesta del servidor destino
     target_data = target_socket.recv(1024)
     client_socket.send(target_data)
+
+    print(f"[*][Server->Client] Tunneling data: {target_data.decode('utf-8')}")
+
 
     # Cierra las conexiones
     target_socket.close()
@@ -37,6 +42,7 @@ def run_server_vpn(bind_host, bind_port, target_host, target_port):
 if __name__ == "__main__":
     BIND_HOST = "127.0.0.1"
     BIND_PORT = 8080
+
     TARGET_HOST = "127.0.0.1"  # Puedes cambiar esto al IP del servidor destino
     TARGET_PORT = 9090
 

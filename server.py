@@ -1,5 +1,8 @@
 import socket
 
+def square(n):
+    return n*n
+
 def run_server(bind_host, bind_port):
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((bind_host, bind_port))
@@ -11,12 +14,20 @@ def run_server(bind_host, bind_port):
         client_socket, addr = server.accept()
         print(f"[*] Accepted connection from {addr[0]}:{addr[1]}")
 
-        data = client_socket.recv(1024)
-        print(f"[*] Received data: {data.decode('utf-8')}")
 
-        # Simula el procesamiento y generación de respuesta
-        response = "Hola desde el servidor destino"
+        # Process request
+        data = client_socket.recv(1024)
+        decoded_data = data.decode('utf-8')
+        print(f"[*] Received number: {decoded_data}")
+
+        try:
+            n = int(decoded_data)
+            response = f"{square(n)}"
+        except ValueError:
+            response = "Error: La cadena no es un número entero válido."
+
         client_socket.send(response.encode("utf-8"))
+
 
         # Cierra la conexión
         client_socket.close()
