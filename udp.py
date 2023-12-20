@@ -99,25 +99,46 @@ def parse_ip(ip_addr):
 
 
 
-def recive(addr, buffer_size):
+def recive(raw_socket, buffer_size):
     reserved = 0
     protocol = socket.IPPROTO_UDP 
 
-    with socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP) as s:
-        s.bind(addr)
-        while True:
-            data, src_addr = s.recvfrom(buffer_size)
+    data, _ = raw_socket.recvfrom(buffer_size)
 
-            packet = parse_data(data)
-            ip_addr = struct.pack('!8B', *[data[x] for x in range(SRC_IP_OFF, SRC_IP_OFF + 8)])
-            udp_psuedo = struct.pack('!BB5H', reserved, protocol, packet['udp_length'], packet['src_port'], packet['dest_port'], packet['udp_length'], 0)
+    packet = parse_data(data)
+    
+    ip_addr = struct.pack('!8B', *[data[x] for x in range(SRC_IP_OFF, SRC_IP_OFF + 8)])
+    udp_psuedo = struct.pack('!BB5H', reserved, protocol, packet['udp_length'], packet['src_port'], packet['dest_port'], packet['udp_length'], 0)
+    
+    verify = verify_checksum(ip_addr + udp_psuedo + packet['data'].encode(), packet['UDP_checksum'])
+
+    if verify == 0xFFFF:
+        return packet['data'], True
+    else:
+        return 'Discard packet(checksum error)', False
+
+
+# def recive(addr, buffer_size):
+#     reserved = 0
+#     protocol = socket.IPPROTO_UDP 
+
+#     with socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP) as s:
+#         s.bind(addr)
+#         while True:
+#             data, src_addr = s.recvfrom(buffer_size)
+
+#             packet = parse_data(data)
+#             ip_addr = struct.pack('!8B', *[data[x] for x in range(SRC_IP_OFF, SRC_IP_OFF + 8)])
+#             udp_psuedo = struct.pack('!BB5H', reserved, protocol, packet['udp_length'], packet['src_port'], packet['dest_port'], packet['udp_length'], 0)
             
-            verify = verify_checksum(ip_addr + udp_psuedo + packet['data'].encode(), packet['UDP_checksum'])
+#             verify = verify_checksum(ip_addr + udp_psuedo + packet['data'].encode(), packet['UDP_checksum'])
 
-            if verify == 0xFFFF:
-                print(packet['data'])
-            else:
-                print('Discard packet: checksum error')
+#             if verify == 0xFFFF:
+#                 # print(packet['data'])
+#                 return packet['data']
+#             else:
+#                 # print('Discard packet: checksum error')
+#                 return 'Discard packet: checksum error'
 
 def verify_checksum(data, checksum):
     data_len = len(data)

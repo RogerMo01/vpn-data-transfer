@@ -1,36 +1,33 @@
 import socket
+from udp import recive as udp_recive
 
 def square(n):
     return n*n
 
 def run_server(bind_host, bind_port):
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((bind_host, bind_port))
-    server.listen(5)
+    server_addr = (bind_host, bind_port)
 
-    print(f"[*] Listening on {bind_host}:{bind_port}")
+    with socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP) as s:
+        s.bind(server_addr)
 
-    while True:
-        client_socket, addr = server.accept()
-        print(f"[*] Accepted connection from {addr[0]}:{addr[1]}")
+        print(f"[*] Listening on {bind_host}:{bind_port}")
 
+        while True:
+            request, valid = udp_recive(s, 1024)
+            
+            response = ""
+            if(not valid):
+                response = request
+            else:
+                # Process request
+                print(f"[<] Process : {request}")
+                try:
+                    n = int(request)
+                    response = f"{square(n)}"
+                except ValueError:
+                    response = "Error(La cadena no es un número entero válido)"
 
-        # Process request
-        data = client_socket.recv(1024)
-        decoded_data = data.decode('utf-8')
-        print(f"[*] Received number: {decoded_data}")
-
-        try:
-            n = int(decoded_data)
-            response = f"{square(n)}"
-        except ValueError:
-            response = "Error: La cadena no es un número entero válido."
-
-        client_socket.send(response.encode("utf-8"))
-
-
-        # Cierra la conexión
-        client_socket.close()
+            print(f"[>] Response: {response}")
 
 if __name__ == "__main__":
     BIND_HOST = "127.0.0.1"
