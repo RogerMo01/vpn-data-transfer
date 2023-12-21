@@ -99,7 +99,7 @@ def parse_ip(ip_addr):
 
 
 
-def recive(raw_socket, buffer_size):
+def receive(raw_socket, buffer_size):
     reserved = 0
     protocol = socket.IPPROTO_UDP 
 

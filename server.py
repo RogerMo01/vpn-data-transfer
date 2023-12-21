@@ -1,5 +1,5 @@
 import socket
-from udp import recive as udp_recive
+from udp import receive as udp_receive
 from udp import send as udp_send
 
 
@@ -12,7 +12,7 @@ def run_server(bind_host, bind_port):
     print(f"[*] Listening on {bind_host}:{bind_port}")
 
     while True:
-        client_addr, request, valid = udp_recive(raw_socket, 1024)
+        client_addr, request, valid = udp_receive(raw_socket, 1024)
         
         if(not valid):
             print(f"[*] {request}")

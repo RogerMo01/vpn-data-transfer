@@ -1,6 +1,5 @@
 import socket
 from udp import send as udp_send
-from udp import recive as udp_recive
 
 CLIENT_IP = ('127.0.0.1', 8080)
 
