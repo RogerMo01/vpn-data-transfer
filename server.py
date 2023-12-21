@@ -1,36 +1,29 @@
 import socket
 from udp import recive as udp_recive
+from udp import send as udp_send
 
-def square(n):
-    return n*n
 
 def run_server(bind_host, bind_port):
     server_addr = (bind_host, bind_port)
 
-    with socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP) as s:
-        s.bind(server_addr)
+    raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
+    raw_socket.bind(server_addr)
 
-        print(f"[*] Listening on {bind_host}:{bind_port}")
+    print(f"[*] Listening on {bind_host}:{bind_port}")
 
-        while True:
-            request, valid = udp_recive(s, 1024)
-            
-            response = ""
-            if(not valid):
-                response = request
-            else:
-                # Process request
-                print(f"[<] Process : {request}")
-                try:
-                    n = int(request)
-                    response = f"{square(n)}"
-                except ValueError:
-                    response = "Error(La cadena no es un número entero válido)"
+    while True:
+        client_addr, request, valid = udp_recive(raw_socket, 1024)
+        
+        if(not valid):
+            print(f"[*] {request}")
+        else:
+            print(f"[*] {client_addr} says: {request}")
 
-            print(f"[>] Response: {response}")
+    raw_socket.close()
+    
 
 if __name__ == "__main__":
-    BIND_HOST = "127.0.0.1"
+    BIND_HOST = "127.0.0.2"
     BIND_PORT = 9090
 
     run_server(BIND_HOST, BIND_PORT)
