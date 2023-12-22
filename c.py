@@ -1,12 +1,10 @@
 import socket
-from udp import build_packet as udp_send
 from udp import build_packet
 
-CLIENT_IP = ('127.0.0.1', 8080)
+CLIENT_ADDR = ('127.0.0.1', 8080)
+TARGET_ADDR = ('127.0.0.2', 9090)
 
-def run_client(target_host, target_port):
-    server_addr = (target_host, target_port)
-
+def run_client():
     while True:
         raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
 
@@ -16,8 +14,8 @@ def run_client(target_host, target_port):
             if(message == 'exit'): 
                 break
             
-            packet = build_packet(message, server_addr, CLIENT_IP)
-            raw_socket.sendto(packet, server_addr)
+            packet = build_packet(message, TARGET_ADDR, CLIENT_ADDR)
+            raw_socket.sendto(packet, TARGET_ADDR)
 
         except KeyboardInterrupt:
             pass
@@ -26,7 +24,4 @@ def run_client(target_host, target_port):
 
 
 if __name__ == "__main__":
-    TARGET_HOST = '127.0.0.2'
-    TARGET_PORT = 9090
-
-    run_client(TARGET_HOST, TARGET_PORT)
+    run_client()

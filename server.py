@@ -1,6 +1,6 @@
 import socket
 from udp import receive as udp_receive
-from udp import send as udp_send
+from udp import build_packet as udp_send
 
 
 def run_server(bind_host, bind_port):
@@ -23,7 +23,7 @@ def run_server(bind_host, bind_port):
     
 
 if __name__ == "__main__":
-    BIND_HOST = "127.0.0.2"
-    BIND_PORT = 9090
+    BIND_HOST = "127.0.0.3"
+    BIND_PORT = 8888
 
     run_server(BIND_HOST, BIND_PORT)

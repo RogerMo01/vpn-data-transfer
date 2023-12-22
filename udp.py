@@ -24,7 +24,7 @@ DATA_OFF        = UDP_CHECKSUM_OFF + 2
 
 
 
-def send(data, dest_addr, src_addr=('127.0.0.1', 35869)):
+def build_packet(data, dest_addr, src_addr):
     # Get ip's
     src_ip, dest_ip = src_addr[0], dest_addr[0]
 
@@ -68,9 +68,11 @@ def send(data, dest_addr, src_addr=('127.0.0.1', 35869)):
     checksum = calculate_checksum(pseudo_header + udp_header + data)
     udp_header = struct.pack('!4H', src_port, dest_port, udp_length, checksum)
 
+    return udp_header + data
     # Send packet
-    with socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP) as s:
-        s.sendto(udp_header + data, dest_addr)
+    # raw_socket.sendto(udp_header + data, dest_addr)
+    # with socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP) as s:
+    #     s.sendto(udp_header + data, dest_addr)
 
 def calculate_checksum(data):
     checksum = 0
