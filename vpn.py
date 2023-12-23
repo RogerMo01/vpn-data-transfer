@@ -53,9 +53,6 @@ class VPN_Server:
                     print(f"[*] Invalid user: {user}")
                     continue
 
-                # Break snippet
-                if(message == 'break'): 
-                    break
         finally:
             # Wait for all threads
             for thread in self._threads:

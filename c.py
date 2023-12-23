@@ -13,6 +13,9 @@ def run_client(user, password):
 
         try:
             message = input("> ")
+
+            if(message == 'exit'): 
+                break
             
             data = {
                 "user": user,
@@ -25,8 +28,6 @@ def run_client(user, password):
             packet = build_packet(json_string, TARGET_ADDR, CLIENT_ADDR)
             raw_socket.sendto(packet, TARGET_ADDR)
 
-            if(message == 'break'): 
-                break
 
         except KeyboardInterrupt:
             pass
