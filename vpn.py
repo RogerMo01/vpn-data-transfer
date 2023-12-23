@@ -152,7 +152,14 @@ if __name__ == "__main__":
     vpn = VPN_Server()
 
     while True:
-        command = input("command> ")
+        input_str = input("admin> ")
+
+        splited_input = input_str.split()
+        if len(splited_input) == 0:
+            print("Invalid input")
+            continue
+
+        command = splited_input[0]
 
         if command == "exit":
             vpn.stop_server()
@@ -168,9 +175,13 @@ if __name__ == "__main__":
             vpn.stop_server()
 
         elif command == "create_user":
-            username = input("Enter username: ")
-            password = input("Enter password: ")
-            vlan = input("Enter VLAN: ")
+            args = len(splited_input)
+            if args != 4:
+                print(f"Given {args-1} arguments, but expected {3}")
+                continue
+
+            _, username, password, vlan = splited_input
+
             vpn._create_user(username, password, vlan)
         
         elif command == "list_users":
