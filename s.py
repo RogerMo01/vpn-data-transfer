@@ -13,6 +13,9 @@ def run_server():
     while True:
         client_addr, request, valid = udp_receive(raw_socket, 1024)
 
+        if(request == 'break'): 
+            break
+
         if(not valid):
             print(f"[*] {request}")
         else:
