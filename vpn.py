@@ -31,10 +31,7 @@ class VPN_Server:
         raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
         raw_socket.bind(BIND_ADDR)
 
-        log = ''
-
-        log = f'[*] Listening on {BIND_ADDR[0]}: {BIND_ADDR[1]}'
-        write_logs(log)
+        write_log(f'[*] Listening on {BIND_ADDR[0]}: {BIND_ADDR[1]}')
 
         try:
             while not self._stop_flag.is_set():
@@ -44,8 +41,7 @@ class VPN_Server:
                 if self._stop_flag.is_set():
                     break
 
-                log = f'[*] Request: {request}'
-                write_logs(log)
+                write_log(f'[*] Request: {request}')
 
                 # Analize input
                 data = json.loads(request)
@@ -56,17 +52,13 @@ class VPN_Server:
 
                 is_valid = VPN_Server._validate_user(self._users, user, password)
                 if is_valid:
-                    log = f'[*] Valid user: {user}'
-                    write_logs(log)
-
                     # Add new thread
                     thread = threading.Thread(target=self._handle_user, args=(raw_socket, message))
                     self._threads.append(thread)
                     thread.start()
 
                 else:  # Invalid user
-                    log = f'[*] Invalid user: {user}'
-                    write_logs(log)
+                    write_log(f'[*] Invalid user: {user}')
                     continue
 
         finally:
@@ -78,14 +70,14 @@ class VPN_Server:
     def stop_server(self):
         # Establecer la bandera de detención
         self._stop_flag.set()
+        write_log(f"[*] Server stopped")
 
 
     def _handle_user(self, raw_socket, message):
         # Logic for assigning new IP
         new_addr = ('192.168.0.103', 44492)
 
-        log = f'[Client -> Server] {message}'
-        write_logs(log)
+        write_log(f'[Client -> Server] {message}')
 
         packet = build_packet(message, TARGET_ADDR, new_addr)
         raw_socket.sendto(packet, TARGET_ADDR)
@@ -133,7 +125,7 @@ def format_dict(dictionary):
         formatted_str += f"{key}: {value}\n"
     return formatted_str
 
-def write_logs(log):
+def write_log(log):
     date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     with open('logs.txt', 'a') as file:
