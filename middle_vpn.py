@@ -3,7 +3,7 @@ from udp import receive as udp_receive
 from udp import build_packet
 
 TARGET_ADDR = ('127.0.0.3', 8888)
-BIND_ADDR = ('127.0.0.2', 9090)
+BIND_ADDR = ('127.0.0.100', 9090)
 
 def run_server_vpn():
     raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)

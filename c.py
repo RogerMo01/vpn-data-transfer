@@ -1,8 +1,10 @@
 import socket
-from udp import build_packet
+# from udp import build_packet
+from unsecure_udp import build_packet
 
-CLIENT_ADDR = ('127.0.0.1', 8080)
-TARGET_ADDR = ('127.0.0.2', 9090)
+CLIENT_ADDR = ('127.0.0.2', 8080)
+TARGET_ADDR = ('127.0.0.100', 9090)
+SERVER_ADDR = ('127.0.0.3', 8888)
 
 def run_client():
     while True:

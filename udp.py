@@ -69,10 +69,7 @@ def build_packet(data, dest_addr, src_addr):
     udp_header = struct.pack('!4H', src_port, dest_port, udp_length, checksum)
 
     return udp_header + data
-    # Send packet
-    # raw_socket.sendto(udp_header + data, dest_addr)
-    # with socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP) as s:
-    #     s.sendto(udp_header + data, dest_addr)
+   
 
 def calculate_checksum(data):
     checksum = 0
