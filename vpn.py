@@ -1,6 +1,7 @@
 import socket
 import json
 import threading
+import ipaddress
 # from udp import receive as udp_receive
 # from udp import build_packet
 from unsecure_udp import build_packet
@@ -12,8 +13,14 @@ BIND_ADDR = ('127.0.0.100', 9090)
 class VPN_Server:
 
     def __init__(self):
-        self._users = {'Pedro': 'picapiedra'}
-        self._ips = {'Pedro': '192.168.1.1'}
+        users = 'users.json'
+        with open(users, 'r') as ips_file:
+            self._users = json.load(ips_file)
+        
+        ips = 'ips.json'
+        with open(ips, 'r') as ips_file:
+            self._ips = json.load(ips_file)
+
         self._threads = []
         self._stop_flag = threading.Event()
 
@@ -72,8 +79,28 @@ class VPN_Server:
         packet = build_packet(message, TARGET_ADDR, new_addr)
         raw_socket.sendto(packet, TARGET_ADDR)
 
-        
-        
+    def _create_user(self, username, password):
+        exists = username in self._users
+        if exists:
+            print("[*] This username already exists")
+        else:
+            # Update users DB
+            self._users[username] = password
+            with open('users.json', 'w') as ips_file:
+                json.dump(self._users, ips_file)
+
+            # Generate new ip
+            last_ip = list(self._ips.values())[-1]
+            ip_obj = ipaddress.ip_address(last_ip)
+            new_ip = str(ip_obj + 1)
+
+            # Update ips DB
+            self._ips[username] = new_ip
+            with open('ips.json', 'w') as ips_file:
+                json.dump(self._ips, ips_file)
+                
+            print(f"[*] User added succesfully with IP: {new_ip}")
+
 
     @staticmethod
     def _validate_user(users, user, password):
@@ -99,6 +126,10 @@ if __name__ == "__main__":
 
         elif command == "stop":
             vpn.stop_server()
+        elif command == "create_user":
+            username = input("Enter username: ")
+            password = input("Enter password: ")
+            vpn._create_user(username, password)
         else:
             print("Command not found")
         
