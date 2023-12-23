@@ -10,22 +10,27 @@ TARGET_ADDR = ('127.0.0.3', 8888)
 BIND_ADDR = ('127.0.0.100', 9090)
 
 class VPN_Server:
-    
 
     def __init__(self):
         self._users = {'Pedro': 'picapiedra'}
         self._ips = {'Pedro': '192.168.1.1'}
         self._threads = []
+        self._stop_flag = threading.Event()
 
-    def start(self):
+
+    def start_server(self):
         raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
         raw_socket.bind(BIND_ADDR)
 
         print(f"[*] Listening on {BIND_ADDR[0]}:{BIND_ADDR[1]}")
 
         try:
-            while True:
+            while not self._stop_flag.is_set():
                 client_addr, request, _ = udp_receive(raw_socket, 1024)
+
+                # Exit in stop case
+                if self._stop_flag.is_set():
+                    break
 
                 print(f"[*] Request: {request}")
                 # Analize input
@@ -39,7 +44,7 @@ class VPN_Server:
                 if is_valid:
                     print(f"[*] Valid user: {user}")
 
-                    # Crear un hilo para manejar la conexión del usuario
+                    # Add new thread
                     thread = threading.Thread(target=self._handle_user, args=(raw_socket, message))
                     self._threads.append(thread)
                     thread.start()
@@ -56,7 +61,9 @@ class VPN_Server:
             for thread in self._threads:
                 thread.join()
 
-
+    def stop_server(self):
+        # Establecer la bandera de detención
+        self._stop_flag.set()
             
     
     def _handle_user(self, raw_socket, message):
@@ -81,5 +88,21 @@ class VPN_Server:
 if __name__ == "__main__":
     vpn = VPN_Server()
 
-    vpn.start()
+    while True:
+        command = input("command> ")
+
+        if command == "exit":
+            vpn.stop_server()
+            break
+        elif command == "start":
+            vpn._stop_flag.clear()
+
+            server_thread = threading.Thread(target=vpn.start_server)
+            server_thread.start()
+
+        elif command == "stop":
+            vpn.stop_server()
+        else:
+            print("Command not found")
+        
 

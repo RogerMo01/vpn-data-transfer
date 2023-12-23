@@ -14,9 +14,6 @@ def run_client(user, password):
         try:
             message = input("> ")
             
-            # if(message == 'break'): 
-            #     break
-            
             data = {
                 "user": user,
                 "password": password,
