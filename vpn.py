@@ -35,6 +35,7 @@ class VPN_Server:
         raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
         raw_socket.bind(BIND_ADDR)
 
+        write_log(f"[*] Server started")
         write_log(f'[*] Listening on {BIND_ADDR[0]}: {BIND_ADDR[1]}')
 
         try:
@@ -124,6 +125,10 @@ class VPN_Server:
         ips = format_dict(self._ips)
         print(ips)
 
+    def list_vlans(self):
+        vlans = format_dict(self._vlans)
+        print(vlans)
+
 
     @staticmethod
     def _validate_user(users, user, password):
@@ -173,6 +178,9 @@ if __name__ == "__main__":
 
         elif command == "list_ips":
             vpn.list_ips()
+
+        elif command == "list_vlans":
+            vpn.list_vlans()
 
         else:
             print("Command not found")
