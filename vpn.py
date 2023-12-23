@@ -16,12 +16,16 @@ class VPN_Server:
 
     def __init__(self):
         users = 'users.json'
-        with open(users, 'r') as ips_file:
-            self._users = json.load(ips_file)
+        with open(users, 'r') as users_file:
+            self._users = json.load(users_file)
         
         ips = 'ips.json'
         with open(ips, 'r') as ips_file:
             self._ips = json.load(ips_file)
+
+        vlans = 'vlans.json'
+        with open(vlans, 'r') as vlans_file:
+            self._vlans = json.load(vlans_file)
 
         self._threads = []
         self._stop_flag = threading.Event()
@@ -83,15 +87,15 @@ class VPN_Server:
         raw_socket.sendto(packet, TARGET_ADDR)
 
 
-    def _create_user(self, username, password):
+    def _create_user(self, username, password, vlan):
         exists = username in self._users
         if exists:
             print("[*] This username already exists")
         else:
             # Update users DB
             self._users[username] = password
-            with open('users.json', 'w') as ips_file:
-                json.dump(self._users, ips_file)
+            with open('users.json', 'w') as users_file:
+                json.dump(self._users, users_file)
 
             # Generate new ip
             last_ip = list(self._ips.values())[-1]
@@ -103,7 +107,14 @@ class VPN_Server:
             with open('ips.json', 'w') as ips_file:
                 json.dump(self._ips, ips_file)
 
-            print(f"[*] User added succesfully with IP: {new_ip}")
+            # Update vlans DB
+            self._vlans[username] = vlan
+            with open('vlans.json', 'w') as vlans_file:
+                json.dump(self._vlans, vlans_file)
+
+            log =f"[*] User added succesfully\nIP: {new_ip}\nVLAN: {vlan}"
+            print(log)
+            write_log(log)
 
     def list_users(self):
         users = format_dict(self._users)
@@ -154,7 +165,8 @@ if __name__ == "__main__":
         elif command == "create_user":
             username = input("Enter username: ")
             password = input("Enter password: ")
-            vpn._create_user(username, password)
+            vlan = input("Enter VLAN: ")
+            vpn._create_user(username, password, vlan)
         
         elif command == "list_users":
             vpn.list_users()
