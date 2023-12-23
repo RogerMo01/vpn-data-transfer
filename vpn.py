@@ -105,6 +105,9 @@ class VPN_Server:
         users = format_dict(self._users)
         print(users)
     
+    def list_ips(self):
+        ips = format_dict(self._ips)
+        print(ips)
 
     @staticmethod
     def _validate_user(users, user, password):
@@ -144,6 +147,10 @@ if __name__ == "__main__":
         
         elif command == "list_users":
             vpn.list_users()
+
+        elif command == "list_ips":
+            vpn.list_ips()
+
         else:
             print("Command not found")
         
