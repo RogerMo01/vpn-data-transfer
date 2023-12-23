@@ -98,9 +98,13 @@ class VPN_Server:
             self._ips[username] = new_ip
             with open('ips.json', 'w') as ips_file:
                 json.dump(self._ips, ips_file)
-                
+
             print(f"[*] User added succesfully with IP: {new_ip}")
 
+    def list_users(self):
+        users = format_dict(self._users)
+        print(users)
+    
 
     @staticmethod
     def _validate_user(users, user, password):
@@ -108,6 +112,11 @@ class VPN_Server:
             
 
 
+def format_dict(dictionary):
+    formatted_str = "\n"
+    for key, value in dictionary.items():
+        formatted_str += f"{key}: {value}\n"
+    return formatted_str
 
 if __name__ == "__main__":
     vpn = VPN_Server()
@@ -118,6 +127,7 @@ if __name__ == "__main__":
         if command == "exit":
             vpn.stop_server()
             break
+
         elif command == "start":
             vpn._stop_flag.clear()
 
@@ -126,10 +136,14 @@ if __name__ == "__main__":
 
         elif command == "stop":
             vpn.stop_server()
+
         elif command == "create_user":
             username = input("Enter username: ")
             password = input("Enter password: ")
             vpn._create_user(username, password)
+        
+        elif command == "list_users":
+            vpn.list_users()
         else:
             print("Command not found")
         
