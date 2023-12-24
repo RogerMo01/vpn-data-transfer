@@ -169,6 +169,9 @@ class VPN_Server:
         vlans = format_dict(self._vlans)
         print(vlans)
 
+    def list_users_restrictions(self):
+        users_restrictions = format_dict(self._restricted_users)
+        print(users_restrictions)
 
     @staticmethod
     def _validate_user(users, user, password):
@@ -239,6 +242,9 @@ if __name__ == "__main__":
 
         elif command == "list_vlans":
             vpn.list_vlans()
+
+        elif command == "list_users_restrictions":
+            vpn.list_users_restrictions()
 
         else:
             print("Command not found")
