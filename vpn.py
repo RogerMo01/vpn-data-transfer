@@ -2,13 +2,10 @@ import socket
 import json
 import threading
 import ipaddress
-# from udp import receive as udp_receive
-# from udp import build_packet
-from unsecure_udp import build_packet
-from unsecure_udp import udp_receive
-from datetime import datetime
+from unsecure_udp import build_packet, udp_receive
+from utils import invalidate_args, validate_input_ip, format_dict, write_log, is_subnet
 
-TARGET_ADDR = ('127.0.0.3', 8888)
+SERVER_ADDR = ('127.0.0.3', 8888)
 BIND_ADDR = ('127.0.0.100', 9090)
 
 
@@ -26,6 +23,10 @@ class VPN_Server:
         vlans = 'vlans.json'
         with open(vlans, 'r') as vlans_file:
             self._vlans = json.load(vlans_file)
+
+        restricted_users = 'restricted_users.json'
+        with open(restricted_users, 'r') as restricted_users_file:
+            self._restricted_users = json.load(restricted_users_file)
 
         self._threads = []
         self._stop_flag = threading.Event()
@@ -58,7 +59,7 @@ class VPN_Server:
                 is_valid = VPN_Server._validate_user(self._users, user, password)
                 if is_valid:
                     # Add new thread
-                    thread = threading.Thread(target=self._handle_user, args=(raw_socket, message))
+                    thread = threading.Thread(target=self._handle_user, args=(raw_socket, user, message))
                     self._threads.append(thread)
                     thread.start()
 
@@ -78,15 +79,30 @@ class VPN_Server:
         write_log(f"[*] Server stopped")
 
 
-    def _handle_user(self, raw_socket, message):
+    def _handle_user(self, raw_socket, user, message):
+        # Check user restrictions
+        if user in self._restricted_users:
+            restricted_ips = self._restricted_users[user]
+
+            # Requested ip
+            requested_ip = SERVER_ADDR[0]
+
+            for ip in restricted_ips:
+                if is_subnet(requested_ip, ip):
+                    # Has no access
+                    write_log(f"[*] User: {user} has no access to IP address: {requested_ip}")
+                    return
+
+
         # Logic for assigning new IP
         new_addr = ('192.168.0.103', 44492)
 
         write_log(f'[Client -> Server] {message}')
 
-        packet = build_packet(message, TARGET_ADDR, new_addr)
-        raw_socket.sendto(packet, TARGET_ADDR)
+        packet = build_packet(message, SERVER_ADDR, new_addr)
+        raw_socket.sendto(packet, SERVER_ADDR)
 
+    
 
     def _create_user(self, username, password, vlan):
         exists = username in self._users
@@ -117,6 +133,29 @@ class VPN_Server:
             print(log)
             write_log(log)
 
+    def _restrict_user(self, user, ip):
+        # Validate user
+        if not user in self._users:
+            log = "[*] User does not exist"
+            print(log)
+            write_log(log)
+            return
+
+        if user in self._restricted_users:  # User is restricted
+            if not ip in self._restricted_users[user]: # Ip is not restricted
+                self._restricted_users[user].append(ip)
+        else:
+            self._restricted_users[user] = [ip]
+        
+        log = "[*] User restricted succesfully"
+        print(log)
+        write_log(log)
+        
+        # Update DB
+        with open('restricted_users.json', 'w') as restricted_users_file:
+                json.dump(self._restricted_users, restricted_users_file)
+        
+
     def list_users(self):
         users = format_dict(self._users)
         print(users)
@@ -135,17 +174,6 @@ class VPN_Server:
         return user in users and users[user] == password
 
 
-def format_dict(dictionary):
-    formatted_str = "\n"
-    for key, value in dictionary.items():
-        formatted_str += f"{key}: {value}\n"
-    return formatted_str
-
-def write_log(log):
-    date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    with open('logs.txt', 'a') as file:
-        file.write(date_time + ': ' + log + '\n')
 
 
 if __name__ == "__main__":
@@ -175,14 +203,32 @@ if __name__ == "__main__":
             vpn.stop_server()
 
         elif command == "create_user":
+            # Validate args count
             args = len(splited_input)
-            if args != 4:
-                print(f"Given {args-1} arguments, but expected {3}")
+            invalid_count = invalidate_args(args-1, 3)
+            if not invalid_count:
                 continue
 
             _, username, password, vlan = splited_input
 
             vpn._create_user(username, password, vlan)
+
+        elif command == "restrict_user":
+            # Validate args count
+            args = len(splited_input)
+            invalid_count = invalidate_args(args-1, 2)
+            if invalid_count:
+                continue
+
+            _, username, ip = splited_input
+
+            # Validar ip
+            valid_ip = validate_input_ip(ip)
+            if not valid_ip:
+                continue
+
+            vpn._restrict_user(username, ip)
+            
         
         elif command == "list_users":
             vpn.list_users()
@@ -195,3 +241,4 @@ if __name__ == "__main__":
 
         else:
             print("Command not found")
+
