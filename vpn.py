@@ -28,6 +28,10 @@ class VPN_Server:
         with open(restricted_users, 'r') as restricted_users_file:
             self._restricted_users = json.load(restricted_users_file)
 
+        restricted_vlans = 'restricted_vlans.json'
+        with open(restricted_vlans, 'r') as restricted_vlans_file:
+            self._restricted_vlans = json.load(restricted_vlans_file)
+
         self._threads = []
         self._stop_flag = threading.Event()
 
@@ -156,6 +160,20 @@ class VPN_Server:
         with open('restricted_users.json', 'w') as restricted_users_file:
                 json.dump(self._restricted_users, restricted_users_file)
         
+    def _restrict_vlan(self, vlan, ip):
+        if vlan in self._restricted_vlans: # VLAN is restricted
+            if not ip in self._restricted_vlans[vlan]: # Ip is not restricted
+                self._restricted_vlans[vlan].append(ip)
+        else:
+            self._restricted_vlans[vlan] = [ip]
+        
+        log = "[*] VLAN restricted succesfully"
+        print(log)
+        write_log(log)
+
+        # Update DB
+        with open('restricted_vlans.json', 'w') as restricted_vlans_file:
+                json.dump(self._restricted_vlans, restricted_vlans_file)
 
     def list_users(self):
         users = format_dict(self._users)
@@ -233,6 +251,25 @@ if __name__ == "__main__":
 
             vpn._restrict_user(username, ip)
             
+        elif command == "restrict_vlan":
+            args = len(splited_input)
+            invalid_count = invalidate_args(args-1, 2)
+            if invalid_count:
+                continue
+
+            _, vlan, ip = splited_input
+
+            # Validate ip
+            valid_ip = validate_input_ip(ip)
+            if not valid_ip:
+                continue
+
+            # Validate vlan
+            if not vlan.isdigit():
+                print("Invalid vlan")
+                continue
+
+            vpn._restrict_vlan(vlan, ip)
         
         elif command == "list_users":
             vpn.list_users()
