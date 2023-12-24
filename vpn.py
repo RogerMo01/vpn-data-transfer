@@ -85,6 +85,7 @@ class VPN_Server:
 
 
     def _handle_user(self, raw_socket, user, message, target_addr):
+
         # Check user restrictions
         if user in self._restricted_users:
             restricted_ips = self._restricted_users[user]
@@ -95,7 +96,21 @@ class VPN_Server:
             for ip in restricted_ips:
                 if is_subnet(requested_ip, ip):
                     # Has no access
-                    write_log(f"[*] User: {user} has no access to IP address: {requested_ip}")
+                    write_log(f"[*] User: {user} has no access to IP address: {requested_ip}, because is in {ip}")
+                    return
+
+        # Check VLAN restrictions
+        user_vlan = self._vlans[user]
+        if user_vlan in self._restricted_vlans:
+            restricted_ips = self._restricted_vlans[user_vlan]
+
+            # Requested ip
+            requested_ip = target_addr[0]
+
+            for ip in restricted_ips:
+                if is_subnet(requested_ip, ip):
+                    # Has no access
+                    write_log(f"[*] VLAN: {user_vlan} has no access to IP address: {requested_ip}, because is in {ip}")
                     return
 
 
@@ -191,6 +206,10 @@ class VPN_Server:
         users_restrictions = format_dict(self._restricted_users)
         print(users_restrictions)
 
+    def list_vlans_restrictions(self):
+        vlans_restrictions = format_dict(self._restricted_vlans)
+        print(vlans_restrictions)
+
     @staticmethod
     def _validate_user(users, user, password):
         return user in users and users[user] == password
@@ -250,7 +269,7 @@ if __name__ == "__main__":
                 continue
 
             vpn._restrict_user(username, ip)
-            
+
         elif command == "restrict_vlan":
             args = len(splited_input)
             invalid_count = invalidate_args(args-1, 2)
@@ -282,6 +301,9 @@ if __name__ == "__main__":
 
         elif command == "list_users_restrictions":
             vpn.list_users_restrictions()
+
+        elif command == "list_vlans_restrictions":
+            vpn.list_vlans_restrictions()
 
         else:
             print("Command not found")
