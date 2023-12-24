@@ -7,7 +7,7 @@ CLIENT_ADDR = ('127.0.0.2', 8080)
 TARGET_ADDR = ('127.0.0.100', 9090)
 SERVER_ADDR = ('127.0.0.3', 8888)
 
-def run_client(user, password):
+def run_client(user, password, server_ip, server_port):
     while True:
         raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
 
@@ -20,7 +20,9 @@ def run_client(user, password):
             data = {
                 "user": user,
                 "password": password,
-                "message": message
+                "message": message,
+                "target_ip": server_ip,
+                "target_port": server_port
             }
 
             json_string = json.dumps(data)
@@ -39,5 +41,9 @@ if __name__ == "__main__":
 
     user = input("Enter user: ")
     password = input("Enter password: ")
+    server_ip = input("Enter server ip: ")
+    server_port = input("Enter server port: ")
 
-    run_client(user, password)
+    # Validate ip and port
+
+    run_client(user, password, server_ip, server_port)

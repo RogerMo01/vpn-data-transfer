@@ -55,11 +55,12 @@ class VPN_Server:
                 user = data['user']
                 password = data['password']
                 message = data['message']
+                target_addr = (data['target_ip'], int(data['target_port']))
 
                 is_valid = VPN_Server._validate_user(self._users, user, password)
                 if is_valid:
                     # Add new thread
-                    thread = threading.Thread(target=self._handle_user, args=(raw_socket, user, message))
+                    thread = threading.Thread(target=self._handle_user, args=(raw_socket, user, message, target_addr))
                     self._threads.append(thread)
                     thread.start()
 
@@ -79,13 +80,13 @@ class VPN_Server:
         write_log(f"[*] Server stopped")
 
 
-    def _handle_user(self, raw_socket, user, message):
+    def _handle_user(self, raw_socket, user, message, target_addr):
         # Check user restrictions
         if user in self._restricted_users:
             restricted_ips = self._restricted_users[user]
 
             # Requested ip
-            requested_ip = SERVER_ADDR[0]
+            requested_ip = target_addr[0]
 
             for ip in restricted_ips:
                 if is_subnet(requested_ip, ip):
@@ -99,8 +100,8 @@ class VPN_Server:
 
         write_log(f'[Client -> Server] {message}')
 
-        packet = build_packet(message, SERVER_ADDR, new_addr)
-        raw_socket.sendto(packet, SERVER_ADDR)
+        packet = build_packet(message, target_addr, new_addr)
+        raw_socket.sendto(packet, target_addr)
 
     
 
