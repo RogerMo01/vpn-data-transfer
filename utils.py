@@ -36,20 +36,32 @@ def write_log(log):
         file.write(date_time + ': ' + log + '\n')
 
 
-def validate_input_ip(ip: str):
+def validate_input_ip(ip: str, include_x=True):
     ip_arr = ip.split(".")
 
     if len(ip_arr) != 4:
         print("Invalid ip")
         return False
     
-    valid_bytes = are_bytes_valid(ip_arr)
+    valid_bytes = are_bytes_valid(ip_arr) if include_x else are_bytes_numbers(ip_arr)
+    
     if not valid_bytes:
         print("Invalid ip")
         return False
     
     return True
-    
+
+def validate_input_port(port: str):
+    try:
+        _ = int(port)
+
+        if len(port) == 4 or len(port) == 5:
+            return True
+    except:
+        pass
+
+    print("Invalid port")
+    return False
 
 def are_bytes_valid(bytes):
     found = False
@@ -68,3 +80,12 @@ def are_bytes_valid(bytes):
                 return False
     return True
 
+def are_bytes_numbers(bytes):
+    for b in bytes:
+        try:
+            value = int(b)
+            if not 0 <= value <= 255:
+                return False
+        except ValueError:
+            return False
+    return True

@@ -1,7 +1,7 @@
 import socket
 import json
-# from udp import build_packet
 from unsecure_udp import build_packet
+from utils import validate_input_ip, validate_input_port
 
 CLIENT_ADDR = ('127.0.0.2', 8080)
 TARGET_ADDR = ('127.0.0.100', 9090)
@@ -41,9 +41,12 @@ if __name__ == "__main__":
 
     user = input("Enter user: ")
     password = input("Enter password: ")
+
     server_ip = input("Enter server ip: ")
-    server_port = input("Enter server port: ")
-
-    # Validate ip and port
-
-    run_client(user, password, server_ip, server_port)
+    is_valid_ip = validate_input_ip(server_ip, False)
+    if is_valid_ip:
+        server_port = input("Enter server port: ")
+        is_valid_port = validate_input_port(server_port)
+        
+    if is_valid_ip and is_valid_port:
+        run_client(user, password, server_ip, server_port)
