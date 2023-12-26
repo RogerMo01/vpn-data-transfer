@@ -6,14 +6,14 @@ The project consists of a simulation of data traffic on a VPN server.
 
 ## Table of Contents
 
-- [Tecnical Details](#Tecnical Details)
-- [Project Structure](#project-structure)
-- [Functionalities](#Functionalities)
-- [IP Ranges](#IP Ranges)
+- [Tecnical Details]()
+- [Project Structure]()
+- [Functionalities]()
+- [IP Ranges]()
 
 
 
-## Tecnical Details:
+## TecnicalDetails:
 
 The project consists of a Console application, built on a set of files developed in Python 3.10, making it easy to run in a terminal on your OS.
 
@@ -67,3 +67,12 @@ To run the VPN server, execute the `vpn.py` file in your operating system's term
 
 `List the restrictions on VLANs.`: List the restrictions on VLANs.
 
+
+
+## IP Ranges:
+VPN: `127.1.1.1`:`9999`
+
+Servers: `127.0.0.10` to `127.0.0.255`
+> Current implemented server: `127.0.0.10`:`8888`
+
+VPN Clients virtual ip's: `127.1.1.2` to `127.255.255.255`
