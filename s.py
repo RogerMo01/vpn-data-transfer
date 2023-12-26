@@ -1,6 +1,5 @@
 import socket
-from unsecure_udp import udp_receive
-# from udp import receive as udp_receive
+from udp import receive as udp_receive
 
 BIND_ADDR = ('127.0.0.3', 8888)
 
@@ -11,7 +10,7 @@ def run_server():
     print(f"[*] Listening on {BIND_ADDR[0]}:{BIND_ADDR[1]}")
 
     while True:
-        client_addr, request, valid = udp_receive(raw_socket, 1024)
+        client_addr, request, valid = udp_receive(raw_socket, BIND_ADDR, 1024)
 
         if(not valid):
             print(f"[*] {request}")

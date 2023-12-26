@@ -1,145 +1,75 @@
 import socket
 import struct
 
-# Offset constants
-VERSION_OFF     = 0
-IHL_OFF         = VERSION_OFF
-DSCP_OFF        = IHL_OFF + 1
-ECN_OFF         = DSCP_OFF
-LENGTH_OFF      = DSCP_OFF + 1
-ID_OFF          = LENGTH_OFF + 2
-FLAGS_OFF       = ID_OFF + 2
-OFF_OFF         = FLAGS_OFF
-TTL_OFF         = OFF_OFF + 2
-PROTOCOL_OFF    = TTL_OFF + 1
-IP_CHECKSUM_OFF = PROTOCOL_OFF + 1
-SRC_IP_OFF      = IP_CHECKSUM_OFF + 2
-DEST_IP_OFF     = SRC_IP_OFF + 4
-SRC_PORT_OFF    = DEST_IP_OFF + 4
-DEST_PORT_OFF   = SRC_PORT_OFF + 2
-UDP_LEN_OFF     = DEST_PORT_OFF + 2
-UDP_CHECKSUM_OFF= UDP_LEN_OFF + 2
-DATA_OFF        = UDP_CHECKSUM_OFF + 2
 
+def calculate_Checksum(pseudo_header, header, message):
+    msg = pseudo_header + header + message
 
+    if len(msg) % 2 != 0:
+        msg += b'\x00'
 
+    s = 0
+    for i in range(0, len(msg), 2):
+        w = (msg[i] << 8) + (msg[i + 1])
+        s = s + w
+
+    s = (s >> 16) + (s & 0xffff)
+    s = s + (s >> 16)
+    s = ~s & 0xffff
+
+    return s
 
 def build_packet(data, dest_addr, src_addr):
-    # Get ip's
-    src_ip, dest_ip = src_addr[0], dest_addr[0]
+    src_ip, src_port = src_addr
+    dest_ip, dest_port = dest_addr
 
-    # Check if any is a localhost
-    src_ip, dest_ip = check_localhost(src_ip), check_localhost(dest_ip)
+    udp_length = 8 + len(data)
 
-    # Convert ip's to binary
-    src_ip, dest_ip = parse_ip(src_ip), parse_ip(dest_ip)
-
-    # Pack ips's
-    src_ip, dest_ip = struct.pack('!4B', *src_ip), struct.pack('!4B', *dest_ip)
-
-    reserved = 0
-
-    # 17
-    protocol = socket.IPPROTO_UDP 
-
-    # Try to encode data
-    try:
-        data = data.encode()
-    except ValueError:
-        pass
-
-    # Get ports
-    src_port = src_addr[1]
-    dest_port = dest_addr[1]
-
-    # length en bytes
-    data_len = len(data)
-    
-    header_length = 8
-    udp_length = header_length + data_len
+    pseudo_header = struct.pack('!4s4sBBH', socket.inet_aton(src_ip), socket.inet_aton(dest_ip), 0, socket.IPPROTO_UDP, udp_length)
 
     checksum = 0
+    udp_header = struct.pack("!HHHH", src_port, dest_port, udp_length, checksum)
 
-    # Build pseudo header
-    pseudo_header = struct.pack('!BBH', reserved, protocol, udp_length)
-    pseudo_header = src_ip + dest_ip + pseudo_header
-    # Build header
-    udp_header = struct.pack('!4H', src_port, dest_port, udp_length, checksum)
-    checksum = calculate_checksum(pseudo_header + udp_header + data)
-    udp_header = struct.pack('!4H', src_port, dest_port, udp_length, checksum)
+    # Calculate correct checksum
+    checksum = calculate_Checksum(pseudo_header, udp_header, data.encode())
 
-    return udp_header + data
-   
-
-def calculate_checksum(data):
-    checksum = 0
-    data_len = len(data)
-
-    if (data_len % 2):
-        data_len += 1
-        data += struct.pack('!B', 0)
+    udp_header_with_checksum = struct.pack('!HHHH', src_port, dest_port, udp_length, checksum)
     
-    for i in range(0, data_len, 2):
-        pair = (data[i] << 8) + (data[i + 1])
-        checksum += pair
-
-    checksum = (checksum >> 16) + (checksum & 0xFFFF)
-    checksum = ~checksum & 0xFFFF
-    return checksum
-
-def check_localhost(addr):
-    return '127.0.0.1' if addr == 'localhost' else addr
-
-def parse_ip(ip_addr):
-    return [int(byte) for byte in ip_addr.split('.')]
-
-
-
-
-
-
-def receive(raw_socket, buffer_size):
-    reserved = 0
-    protocol = socket.IPPROTO_UDP 
-
-    data, _ = raw_socket.recvfrom(buffer_size)
-
-    packet = parse_data(data)
-    
-    ip_addr = struct.pack('!8B', *[data[x] for x in range(SRC_IP_OFF, SRC_IP_OFF + 8)])
-    udp_psuedo = struct.pack('!BB5H', reserved, protocol, packet['udp_length'], packet['src_port'], packet['dest_port'], packet['udp_length'], 0)
-    
-    verify = verify_checksum(ip_addr + udp_psuedo + packet['data'].encode(), packet['UDP_checksum'])
-
-    if verify == 0xFFFF:
-        return (packet['src_ip'], packet['src_port']), packet['data'], True
-    else:
-        return (packet['src_ip'], packet['src_port']), 'Discard packet(checksum error)', False
-
-def verify_checksum(data, checksum):
-    data_len = len(data)
-    if (data_len % 2) == 1:
-        data_len += 1
-        data += struct.pack('!B', 0)
-    
-    for i in range(0, data_len, 2):
-        pair = (data[i] << 8) + (data[i + 1])
-        checksum += pair
-        checksum = (checksum >> 16) + (checksum & 0xFFFF)
-
-    return checksum
-
-def parse_data(data):
-    udp_length = (data[UDP_LEN_OFF] << 8) + data[UDP_LEN_OFF + 1]
-    packet = {
-        'Checksum'     : (data[IP_CHECKSUM_OFF] << 8) + data[IP_CHECKSUM_OFF + 1],
-        'src_ip'       : '.'.join(map(str, [data[x] for x in range(SRC_IP_OFF, SRC_IP_OFF + 4)])),
-        'dest_ip'      : '.'.join(map(str, [data[x] for x in range(DEST_IP_OFF, DEST_IP_OFF + 4)])),
-        'src_port'     : (data[SRC_PORT_OFF] << 8) + data[SRC_PORT_OFF + 1],
-        'dest_port'    : (data[DEST_PORT_OFF] << 8) + data[DEST_PORT_OFF + 1],
-        'udp_length'   : udp_length,
-        'UDP_checksum' : (data[UDP_CHECKSUM_OFF] << 8) + data[UDP_CHECKSUM_OFF + 1],
-        'data'         : ''.join(map(chr, [data[DATA_OFF + x] for x in range(0, udp_length - 8)]))
-    }
+    packet = udp_header_with_checksum + data.encode()
 
     return packet
+
+
+
+def receive(socket_raw, own_addr, buffer_size):
+
+    try:
+        data, sender_addr = socket_raw.recvfrom(buffer_size)
+    except Exception as e:
+        print("Error during receive:", e)
+
+    udp_header = data[20:28]
+    
+    src_port, dest_port, length, checksum = struct.unpack('!HHHH', udp_header)
+
+    # Verify using checksum
+    pseudo_header = struct.pack('!4s4sBBH', socket.inet_aton(sender_addr[0]), socket.inet_aton(own_addr[0]), 0, socket.IPPROTO_UDP, length)
+    udp_0_header = udp_header[:6] + b'\x00\x00' + udp_header[8:]
+
+    calculated_checksum = calculate_Checksum(pseudo_header, udp_0_header, data[28:])
+
+    if(calculated_checksum != checksum):
+        return (sender_addr[0], src_port), "Checksum error, packet discarted", False
+
+    data_payload = data[28:].decode('utf-8')
+
+    packet =  {
+        'src_port': src_port,
+        'dest_port': dest_port,
+        'length': length,
+        'checksum': checksum,
+        'data': data_payload,
+        'sender_addr': sender_addr
+    }
+
+    return (sender_addr[0], src_port), data_payload, True

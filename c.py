@@ -1,9 +1,9 @@
 import socket
 import json
-from unsecure_udp import build_packet
+from udp import build_packet
 from utils import validate_input_ip, validate_input_port
 
-CLIENT_ADDR = ('127.0.0.2', 8080)
+CLIENT_ADDR = ('127.0.0.1', 0)
 TARGET_ADDR = ('127.0.0.100', 9090)
 SERVER_ADDR = ('127.0.0.3', 8888)
 
