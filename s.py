@@ -1,7 +1,7 @@
 import socket
 from udp import receive as udp_receive
 
-BIND_ADDR = ('127.0.0.3', 8888)
+BIND_ADDR = ('127.0.0.10', 8888)
 
 def run_server():
     raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)

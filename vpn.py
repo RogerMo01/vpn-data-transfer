@@ -6,7 +6,7 @@ from udp import build_packet
 from udp import receive as udp_receive
 from utils import invalidate_args, validate_input_ip, format_dict, write_log, is_subnet
 
-BIND_ADDR = ('127.0.0.100', 9090)
+BIND_ADDR = ('127.1.1.1', 9999)
 
 class VPN_Server:
 
