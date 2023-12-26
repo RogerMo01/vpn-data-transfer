@@ -120,14 +120,35 @@ class VPN_Server:
 
 
         # Logic for assigning new IP
-        # new_addr = ('192.168.0.103', 44492)
+        new_addr = ('127.1.1.103', 9999)
 
         write_log(f'[Client -> Server] {message}')
 
-        packet = build_packet(message, target_addr, BIND_ADDR)
-        raw_socket.sendto(packet, target_addr)
+        # Crea socket del cliente vpn
+        vpn_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP)
+        vpn_socket.bind(new_addr)
 
-    
+        # poner en hilo la espera del mensaje
+        thread = threading.Thread(target=self._resend, args=(vpn_socket, target_addr, new_addr))
+        thread.start()
+        
+        # Manda el mensaje al socket del cliente
+        packet = build_packet(message, new_addr, BIND_ADDR)
+        raw_socket.sendto(packet, new_addr)
+
+
+    def _resend(self, vpn_socket, server_addr, vpn_client_addr):
+        client_addr, request, valid = udp_receive(vpn_socket, vpn_client_addr, 1024)
+
+        if not valid:
+            write_log(f'[*] {request}')
+            return
+        
+        packet = build_packet(request, server_addr, vpn_client_addr)
+        vpn_socket.sendto(packet, server_addr)
+
+
+
 
     def _create_user(self, username, password, vlan):
         exists = username in self._users
