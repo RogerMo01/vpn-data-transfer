@@ -44,7 +44,7 @@ class VPN_Server:
 
         try:
             while not self._stop_flag.is_set():
-                client_addr, request, valid = udp_receive(raw_socket, BIND_ADDR, 1024)
+                _, request, valid = udp_receive(raw_socket, BIND_ADDR, 1024)
 
                 # Exit in stop case
                 if self._stop_flag.is_set():
@@ -120,7 +120,7 @@ class VPN_Server:
 
 
         # Logic for assigning new IP
-        new_addr = ('127.1.1.103', 9999)
+        new_addr = (self._ips[user], 9999)
 
         write_log(f'[Client -> Server] {message}')
 
@@ -138,7 +138,7 @@ class VPN_Server:
 
 
     def _resend(self, vpn_socket, server_addr, vpn_client_addr):
-        client_addr, request, valid = udp_receive(vpn_socket, vpn_client_addr, 1024)
+        _, request, valid = udp_receive(vpn_socket, vpn_client_addr, 1024)
 
         if not valid:
             write_log(f'[*] {request}')
@@ -146,6 +146,7 @@ class VPN_Server:
         
         packet = build_packet(request, server_addr, vpn_client_addr)
         vpn_socket.sendto(packet, server_addr)
+        vpn_socket.close()
 
 
 
@@ -273,7 +274,7 @@ if __name__ == "__main__":
             # Validate args count
             args = len(splited_input)
             invalid_count = invalidate_args(args-1, 3)
-            if not invalid_count:
+            if invalid_count:
                 continue
 
             _, username, password, vlan = splited_input
