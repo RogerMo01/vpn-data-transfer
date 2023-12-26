@@ -1,11 +1,4 @@
 import struct
-import zlib
-import socket
-
-def checksum_calculator(data):
- checksum = zlib.crc32(data)
- return checksum
-
 
 def build_packet(data, dest_addr, src_addr):
     # Construir el encabezado UDP

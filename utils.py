@@ -89,3 +89,10 @@ def are_bytes_numbers(bytes):
         except ValueError:
             return False
     return True
+
+def refact_request(request: str):
+    data = json.loads(request)
+    user = data['user']
+    message = data['message']
+    target_ip, target_port = (data['target_ip'], int(data['target_port']))
+    return f"User '{user}' requested '{message}' to '{target_ip}:{target_port}'"
