@@ -4,7 +4,7 @@ import threading
 import ipaddress
 from udp import build_packet
 from udp import receive as udp_receive
-from utils import invalidate_args, validate_input_ip, format_dict, write_log, is_subnet
+from utils import invalidate_args, validate_input_ip, format_dict, write_log, is_subnet, refact_request
 
 BIND_ADDR = ('127.1.1.1', 9999)
 
@@ -55,7 +55,7 @@ class VPN_Server:
                     continue
 
 
-                write_log(f'[*] Request: {request}')
+                write_log(f'[*] ' + refact_request(request))
 
 
                 # Analize input
