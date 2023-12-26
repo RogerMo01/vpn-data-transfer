@@ -1,11 +1,10 @@
 import socket
 import json
-from unsecure_udp import build_packet
+from udp import build_packet
 from utils import validate_input_ip, validate_input_port
 
-CLIENT_ADDR = ('127.0.0.2', 8080)
-TARGET_ADDR = ('127.0.0.100', 9090)
-SERVER_ADDR = ('127.0.0.3', 8888)
+CLIENT_ADDR = ('127.0.0.1', 0)
+VPN_ADDR = ('127.1.1.1', 9999)
 
 def run_client(user, password, server_ip, server_port):
     while True:
@@ -27,8 +26,8 @@ def run_client(user, password, server_ip, server_port):
 
             json_string = json.dumps(data)
 
-            packet = build_packet(json_string, TARGET_ADDR, CLIENT_ADDR)
-            raw_socket.sendto(packet, TARGET_ADDR)
+            packet = build_packet(json_string, VPN_ADDR, CLIENT_ADDR)
+            raw_socket.sendto(packet, VPN_ADDR)
 
 
         except KeyboardInterrupt:

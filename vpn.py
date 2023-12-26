@@ -2,12 +2,11 @@ import socket
 import json
 import threading
 import ipaddress
-from unsecure_udp import build_packet, udp_receive
+from udp import build_packet
+from udp import receive as udp_receive
 from utils import invalidate_args, validate_input_ip, format_dict, write_log, is_subnet
 
-SERVER_ADDR = ('127.0.0.3', 8888)
-BIND_ADDR = ('127.0.0.100', 9090)
-
+BIND_ADDR = ('127.1.1.1', 9999)
 
 class VPN_Server:
 
@@ -45,13 +44,19 @@ class VPN_Server:
 
         try:
             while not self._stop_flag.is_set():
-                client_addr, request, _ = udp_receive(raw_socket, 1024)
+                client_addr, request, valid = udp_receive(raw_socket, BIND_ADDR, 1024)
 
                 # Exit in stop case
                 if self._stop_flag.is_set():
                     break
 
+                if not valid:
+                    write_log(f'[*] {request}')
+                    continue
+
+
                 write_log(f'[*] Request: {request}')
+
 
                 # Analize input
                 data = json.loads(request)
@@ -115,11 +120,11 @@ class VPN_Server:
 
 
         # Logic for assigning new IP
-        new_addr = ('192.168.0.103', 44492)
+        # new_addr = ('192.168.0.103', 44492)
 
         write_log(f'[Client -> Server] {message}')
 
-        packet = build_packet(message, target_addr, new_addr)
+        packet = build_packet(message, target_addr, BIND_ADDR)
         raw_socket.sendto(packet, target_addr)
 
     
